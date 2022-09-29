@@ -1,4 +1,5 @@
 use std::{env, path::*, process::Command};
+extern crate pkg_config;
 
 fn feature_enabled(feature: &str) -> bool {
     env::var(format!("CARGO_FEATURE_{}", feature.to_uppercase())).is_ok()
@@ -64,6 +65,12 @@ fn main() {
         "dylib"
     };
     if feature_enabled("system") {
+        if pkg_config::probe_library("openblas").is_ok() {
+            // pkg-config does everything, including output for cargon: we can
+            // jump out early.
+            return;
+        }
+
         if cfg!(target_os = "windows") {
             if cfg!(target_env = "gnu") {
                 windows_gnu_system();
